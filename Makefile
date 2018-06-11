@@ -24,18 +24,18 @@
 
 # if set, network filesystem is enabled. libcurl and libcrypto
 # (openssl) must be installed.
-CONFIG_FS_NET=y
+CONFIG_FS_NET=n
 # SDL support (optional)
-CONFIG_SDL=y
+CONFIG_SDL=n
 # if set, compile the 128 bit emulator. Note: the 128 bit target does
 # not compile if gcc does not support the int128 type (32 bit hosts).
-CONFIG_INT128=y
+CONFIG_INT128=n
 # build x86emu
-CONFIG_X86EMU=y
+CONFIG_X86EMU=n
 # win32 build (not usable yet)
 #CONFIG_WIN32=y
 # user space network redirector
-CONFIG_SLIRP=y
+CONFIG_SLIRP=n
 
 ifdef CONFIG_WIN32
 CROSS_PREFIX=i686-w64-mingw32-
@@ -46,26 +46,29 @@ EXE=
 endif
 CC=$(CROSS_PREFIX)gcc
 STRIP=$(CROSS_PREFIX)strip
-CFLAGS=-O2 -Wall -g -Werror -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -MMD
+#CFLAGS=-O2 -Wall -g -Werror -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -MMD
+CFLAGS=-O2 -Wall -g -D_FILE_OFFSET_BITS=64 -D_LARGEFILE_SOURCE -MMD
+
 CFLAGS+=-D_GNU_SOURCE -DCONFIG_VERSION=\"$(shell cat VERSION)\"
 LDFLAGS=
 
 bindir=/usr/local/bin
 INSTALL=install
 
-PROGS+= riscvemu32$(EXE) riscvemu64$(EXE)
-ifdef CONFIG_INT128
-PROGS+=riscvemu128$(EXE)
-endif
-ifdef CONFIG_X86EMU
-PROGS+=x86emu$(EXE)
-endif
-ifndef CONFIG_WIN32
-PROGS+=riscvemu
-ifdef CONFIG_FS_NET
-PROGS+=build_filelist splitimg
-endif
-endif
+#PROGS+= riscvemu32$(EXE) riscvemu64$(EXE)
+PROGS+= riscvemu32$(EXE)
+#ifdef CONFIG_INT128
+#PROGS+=riscvemu128$(EXE)
+#endif
+#ifdef CONFIG_X86EMU
+#PROGS+=x86emu$(EXE)
+#endif
+#ifndef CONFIG_WIN32
+#PROGS+=riscvemu
+#ifdef CONFIG_FS_NET
+#PROGS+=build_filelist splitimg
+#endif
+#endif
 
 all: $(PROGS)
 
@@ -146,7 +149,7 @@ install: $(PROGS)
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean:
-	rm -f *.o *.d *~ $(PROGS) slirp/*.o slirp/*.d slirp/*~
+	rm -f *.o *.d *~ $(PROGS) slirp/*.o slirp/*.d slirp/*~ riscvemu riscvemu64 riscvemu32 riscvemu128 splitimg x86emu build_filelist
 
 -include $(wildcard *.d)
 -include $(wildcard slirp/*.d)

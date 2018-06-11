@@ -1,0 +1,9 @@
+*.o
+*.d
+riscvemu
+riscvemu32
+riscvemu64
+riscvemu128
+x86emu
+splitimg
+build_filelist
