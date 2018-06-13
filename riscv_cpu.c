@@ -208,17 +208,18 @@ struct RISCVCPUState {
     uint8_t *__code_ptr, *__code_end;
     target_ulong __code_to_pc_addend;
 #endif
-    
+
+// float feature
 #if FLEN > 0
     fp_uint fp_reg[32];
     uint32_t fflags;
     uint8_t frm;
 #endif
     
-    uint8_t cur_xlen;  /* current XLEN value, <= MAX_XLEN */
-    uint8_t priv; /* see PRV_x */
-    uint8_t fs; /* MSTATUS_FS value */
-    uint8_t mxl; /* MXL field in MISA register */
+    uint8_t cur_xlen;              /* current XLEN value, <= MAX_XLEN */
+    uint8_t priv;                  /* see PRV_x */
+    uint8_t fs;                    /* MSTATUS_FS value */
+    uint8_t mxl;                   /* MXL field in MISA register */
     
     uint64_t insn_counter;
     BOOL power_down_flag;
@@ -226,33 +227,33 @@ struct RISCVCPUState {
     target_ulong pending_tval;
     
     /* CSRs */
-    target_ulong mstatus;
-    target_ulong mtvec;
-    target_ulong mscratch;
-    target_ulong mepc;
-    target_ulong mcause;
-    target_ulong mtval;
-    target_ulong mhartid; /* ro */
-    uint32_t misa;
-    uint32_t mie;
-    uint32_t mip;
-    uint32_t medeleg;
-    uint32_t mideleg;
-    uint32_t mcounteren;
+    target_ulong mstatus;          //Machine status register
+    target_ulong mtvec;            //Machine trap-handler base address
+    target_ulong mscratch;         //Scratch register for machine trap handlers
+    target_ulong mepc;             //Machine exception program counter
+    target_ulong mcause;           //Machine trap cause
+    target_ulong mtval;            //Machine bad address or instruction
+    target_ulong mhartid;          ///Hardware thread ID, RO
+    uint32_t misa;                 //ISA and extensions
+    uint32_t mie;                  //Machine interrupt-enable register
+    uint32_t mip;                  //Machine interrupt pending
+    uint32_t medeleg;              //Machine exception delegation register
+    uint32_t mideleg;              //Machine interrupt delegation register
+    uint32_t mcounteren;           //Machine counter enable
     
-    target_ulong stvec;
-    target_ulong sscratch;
-    target_ulong sepc;
-    target_ulong scause;
-    target_ulong stval;
+    target_ulong stvec;            //Supervisor trap handler base address
+    target_ulong sscratch;         //Scratch register for supervisor trap handlers
+    target_ulong sepc;             //Supervisor exception program counter
+    target_ulong scause;           //Supervisor trap cause
+    target_ulong stval;            //Supervisor bad address or instruction
 #if MAX_XLEN == 32
-    uint32_t satp;
+    uint32_t satp;                 //Supervisor address translation and protection
 #else
     uint64_t satp; /* currently 64 bit physical addresses max */
 #endif
-    uint32_t scounteren;
+    uint32_t scounteren;           //Supervisor counter enable
 
-    target_ulong load_res; /* for atomic LR/SC */
+    target_ulong load_res;         /* for atomic LR/SC */
 
     PhysMemoryMap *mem_map;
 
@@ -1556,9 +1557,21 @@ RISCVCPUState *riscv_cpu_init(PhysMemoryMap *mem_map)
     s->pc = 0x1000;
     s->priv = PRV_M;
     s->cur_xlen = MAX_XLEN;
-    s->mxl = get_base_from_xlen(MAX_XLEN);
+    s->mxl = get_base_from_xlen(MAX_XLEN);   //mxl: xlen  1:32  2:64 3:128
     s->mstatus = ((uint64_t)s->mxl << MSTATUS_UXL_SHIFT) |
         ((uint64_t)s->mxl << MSTATUS_SXL_SHIFT);
+
+/*
+ *  A        Atomic extension
+ * SUPER	Supervisor mode implemented
+ * USER		User mode implemented
+ * I		RV32I/64I/128I base ISA
+ * M		Integer Multiply/Divide extension
+ * F		Single-precision floating-point extension
+ * D		Double-precision floating-point extension
+ * Q		Quad-precision floating-point extension
+ * EXT_C/C	Compressed extension
+ */
     s->misa |= MCPUID_SUPER | MCPUID_USER | MCPUID_I | MCPUID_M | MCPUID_A;
 #if FLEN >= 32
     s->misa |= MCPUID_F;

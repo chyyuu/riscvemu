@@ -7,3 +7,6 @@ riscvemu128
 x86emu
 splitimg
 build_filelist
+.cproject
+.project
+.settings/

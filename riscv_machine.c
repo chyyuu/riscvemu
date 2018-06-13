@@ -49,7 +49,7 @@ typedef struct RISCVMachine {
     BOOL rtc_real_time;
     uint64_t rtc_start_time;
     uint64_t timecmp;
-    /* PLIC */
+    /* Platform-Level Interrupt Controller (PLIC) */
     uint32_t plic_pending_irq, plic_served_irq;
     IRQSignal plic_irq[32]; /* IRQ 0 is not used */
     /* HTIF */
@@ -128,14 +128,16 @@ static uint32_t htif_read(void *opaque, uint32_t offset,
 static void htif_handle_cmd(RISCVMachine *s)
 {
     uint32_t device, cmd;
-
+    //decode s->htif_tohost to get char device
     device = s->htif_tohost >> 56;
+    //decode s->htif_tohost to get command 1:write 0:read
     cmd = (s->htif_tohost >> 48) & 0xff;
     if (s->htif_tohost == 1) {
         /* shuthost */
         printf("\nPower off.\n");
         exit(0);
     } else if (device == 1 && cmd == 1) {
+    	// displace char
         uint8_t buf[1];
         buf[0] = s->htif_tohost & 0xff;
         s->common.console->write_data(s->common.console->opaque, buf, 1);
@@ -161,6 +163,7 @@ static void htif_write(void *opaque, uint32_t offset, uint32_t val,
         break;
     case 4:
         s->htif_tohost = (s->htif_tohost & 0xffffffff) | ((uint64_t)val << 32);
+        // call htif_handle_cmd to write char to console
         htif_handle_cmd(s);
         break;
     case 8:
@@ -748,7 +751,7 @@ static void copy_kernel(RISCVMachine *s, const uint8_t *buf, int buf_len,
     fdt_addr = 0x1000 + 8 * 8;
 
     riscv_build_fdt(s, ram_ptr + fdt_addr, cmd_line);
-
+    //chyyuu ???
     /* jump_addr = 0x80000000 */
     
     q = (uint32_t *)(ram_ptr + 0x1000);
@@ -796,9 +799,10 @@ VirtMachine *virt_machine_init(const VirtMachineParams *p)
     if (p->rtc_real_time) {
         s->rtc_start_time = rtc_get_real_time(s);
     }
-    
+    //Core Local Interruptor (CLINT) for Timer interrupts and IPIs
     cpu_register_device(s->mem_map, CLINT_BASE_ADDR, CLINT_SIZE, s,
                         clint_read, clint_write, DEVIO_SIZE32);
+    //Platform Level Interrupt Controller(PLIC)
     cpu_register_device(s->mem_map, PLIC_BASE_ADDR, PLIC_SIZE, s,
                         plic_read, plic_write, DEVIO_SIZE32);
     for(i = 1; i < 32; i++) {
